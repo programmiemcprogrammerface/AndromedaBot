@@ -32,6 +32,13 @@ async def get_circulating_supply():
         logger.error(f"Error fetching circulating supply: {e}")
         return None
 
+# Function to greet users and explain commands
+async def start(update: Update, context: CallbackContext) -> None:
+    await update.message.reply_text(
+        "Welcome to the ANDR Market Cap Bot! 🚀\n\n"
+        "Use the command /marketcap to get the current market cap of ANDR.\n\n"
+        "Just type or tap on /marketcap to get started!"
+    )
 
 
 
@@ -69,9 +76,14 @@ async def market_cap(update: Update, context: CallbackContext) -> None:
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Add start command handler
+    application.add_handler(CommandHandler("start", start))
+    
+    # Add marketcap command handler
     application.add_handler(CommandHandler("marketcap", market_cap))
 
     application.run_polling()
 
 if __name__ == '__main__':
     main()
+
