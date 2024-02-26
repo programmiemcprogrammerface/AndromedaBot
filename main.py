@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 # Cache setup for circulating supply (24 hours TTL)
 circulating_supply_cache = TTLCache(maxsize=1, ttl=86400)  # 86400 seconds = 24 hours
+# Cache setup for MEXC price data (5 minutes TTL)
+price_cache = TTLCache(maxsize=1, ttl=300)  # 300 seconds = 5 minutes
 
 # Environment variables for configuration
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -44,15 +46,20 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 # Function to get ANDR's price from MEXC
 async def get_andr_price():
+    if 'andr_price' in price_cache:
+        return price_cache['andr_price']
     try:
         params = {'symbol': 'ANDR_USDT'}
         response = requests.get(MEXC_MARKET_URL, params=params, timeout=10)
         response.raise_for_status()
         response_json = response.json()
-        return float(response_json['data'][0]['last'])
+        last_price = float(response_json['data'][0]['last'])
+        price_cache['andr_price'] = last_price
+        return last_price
     except Exception as e:
         logger.error(f"Error fetching ANDR price: {e}")
         return None
+
 
 # Command handler function for market cap
 async def market_cap(update: Update, context: CallbackContext) -> None:
